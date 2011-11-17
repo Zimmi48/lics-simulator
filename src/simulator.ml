@@ -50,17 +50,12 @@ let rec simulate prog input regs n =
   (* lance les cycles suivant avec les nouvelles valeurs des registres *)
   if n > 1 then simulate prog input new_regs (n-1)
 
-let simulator prog input n =
-  let rec compte_registre = List.fold_left (function n -> function
-	| (Inputreg _) -> n + 1
-	| _ -> n
-    ) 0 in
-  let k = compte_registre prog in
+let simulator circuit input n =
   let rec cree_liste = function
     | 0 -> []
     | n -> false::(cree_liste (n-1))
   in (* liste des valeurs initiales des registres *)
-  simulate prog input (cree_liste k) n
+  simulate circuit.programme input (cree_liste circuit.nb_reg) n
 
 (* Tests *)
 (*

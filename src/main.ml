@@ -23,8 +23,8 @@ let input =
 let n = int_of_string Sys.argv.(lengthArgv - 1)
 
 let () =
-  let prog =
+  let circuit =
     try LicsFileIO.read s
     with _ -> failwith ("Erreur à l'ouverture du fichier " ^ s)
   in
-  Simulator.simulator prog input n
+  Simulator.simulator circuit input n
