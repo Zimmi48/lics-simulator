@@ -1,12 +1,5 @@
 open LicsAst
 
-module Tint = struct
-  type t = int
-  let compare = Pervasives.compare
-end
-
-module IMap = Map.Make(Tint) (* pour les environnements de variables *)
-
 let eval_expr env = (* env contient les variables déjà définies *)
   let find x = env.(x) in function
     | Const c -> c
