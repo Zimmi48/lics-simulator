@@ -5,7 +5,7 @@ de cycles à effectuer"
 
 let lengthArgv = Array.length Sys.argv
 
-let () = if lengthArgv < 2 then mauvaise_utilisation ()
+let () = if lengthArgv < 3 then mauvaise_utilisation ()
 
 let s = Sys.argv.(1)
 
