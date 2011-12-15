@@ -50,5 +50,5 @@ let simulator circuit input n =
     | 0 -> []
     | n -> false::(cree_liste (n-1))
   in (* liste des valeurs initiales des registres *)
-  let env = Array.make circuit.numero_var_max false in
+  let env = Array.make (circuit.numero_var_max + 1) false in
   simulate circuit.programme input (cree_liste circuit.nb_reg) n env
