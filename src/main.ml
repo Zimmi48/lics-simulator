@@ -1,11 +1,11 @@
 let mauvaise_utilisation () =
   failwith "Utilisation incorrecte : vous devez fournir au simulateur le nom du
-fichier à interpréter, les entrées séparées par des espaces ainsi que le nombre
+fichier à interpréter, les entrées séparées par des espaces et le nombre
 de cycles à effectuer"
 
 let lengthArgv = Array.length Sys.argv
 
-let () = if lengthArgv < 3 then mauvaise_utilisation ()
+let () = if lengthArgv < 2 then mauvaise_utilisation ()
 
 let s = Sys.argv.(1)
 
