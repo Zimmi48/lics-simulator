@@ -4,9 +4,7 @@ exception Inputs_missing
 exception Lw_rom
 
 
-let simulator circuit input n print_outputs decimal =
-
-  let rom = Array.make 65536 [] in (* adresses codées sur 16 bits (au plus) *)
+let simulator circuit input n print_outputs decimal rom =
 
   let int_of_bool = function true -> 1 | false -> 0 in
 

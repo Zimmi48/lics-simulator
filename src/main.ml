@@ -61,7 +61,7 @@ let () =
   end;
   try
     Simulator.simulator
-      circuit (List.rev !inputs) !cycles (not !no_outputs) !decimal
+      circuit (List.rev !inputs) !cycles (not !no_outputs) !decimal rom
   with
     | Simulator.Inputs_missing -> (
       eprintf "Inputs missing\n";
