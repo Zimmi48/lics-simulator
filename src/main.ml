@@ -5,7 +5,7 @@ open Printf
 let ifile = ref ""
 let cycles = ref 0
 let no_outputs = ref false
-let rom = ref ""
+let load_rom = ref ""
 let decimal = ref false
 let inputs = ref []
 
@@ -22,7 +22,7 @@ in
 let options = [
   "-cycles", Arg.Set_int cycles, "Nombre de cycles a effectuer";
   "-no-outputs", Arg.Set no_outputs, "N'affiche pas les sorties du circuit";
-  "-load-rom", Arg.Set_string rom , "Nom du fichier contenant les valeurs initiales de la ROM";
+  "-load-rom", Arg.Set_string load_rom , "Nom du fichier contenant les valeurs initiales de la ROM";
   "-decimal", Arg.Set decimal, "Convertir les sorties en decimal et les afficher en mode graphique."
 ]
 
@@ -41,6 +41,24 @@ let () =
       exit 1
     )
   in
+  let rom = Array.make 65536 [] in
+  (* adresses codées sur 16 bits (au plus) *)
+  if !load_rom <> "" then begin
+    try
+      let f = open_in !load_rom in
+      let rom_in : bool list array = input_value f in
+      close_in f;
+      Array.blit rom_in 0 rom 0 (Array.length rom_in)
+    with
+      | Invalid_argument "Array.blit" -> (
+        eprintf "Rom chargee trop grosse\n" ;
+        exit 1
+      )
+      | _ -> (
+        eprintf "Erreur a l'ouverture du fichier %s\n" !load_rom ;
+        exit 1
+      )
+  end;
   try
     Simulator.simulator
       circuit (List.rev !inputs) !cycles (not !no_outputs) !decimal
