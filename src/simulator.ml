@@ -1,7 +1,21 @@
 open LicsAst
 
-let eval_expr env = (* env contient les variables déjà définies *)
-  let find x = env.(x) in function
+exception Inputs_missing
+exception Lw_rom
+
+
+let simulator circuit input n print_outputs decimal =
+
+  let rom = Array.make 65536 [] in (* adresses codées sur 16 bits (au plus) *)
+
+  let int_of_bool = function true -> 1 | false -> 0 in
+
+  (* env contient les variables déjà définies *)
+  let env = Array.make (circuit.numero_var_max + 1) false in
+  let add i x = env.(i) <- x in
+  let find x = env.(x) in
+
+  let eval_expr = function
     | Const c -> c
     | Unaire (Not,i) -> not (find i)
     | Binaire (Or, i, j) -> (find i) or (find j)
@@ -10,45 +24,100 @@ let eval_expr env = (* env contient les variables déjà définies *)
     | Binaire (Xor, i, j) ->
       ((find i) & not (find j)) or ((not (find i)) & (find j))
     | Ternaire (Mux, i, j, k) -> if find i then find j else find k
+  in
 
-let rec eval_stmt env inputReg input =
-  let add i x = env.(i) <- x ; env in
-  let find x = env.(x) in
-(* environnements des variables, valeurs envoyées par les registres, entrées *)
-  let hd = List.hd and tl = List.tl in
-  function
-    | [] -> [] , []
-    | h::t -> match h with
-	| Assign (i,e) -> (* on rajoute une variable à l'environnement *)
-	  eval_stmt (add i (eval_expr env e)) inputReg input t
-	| Inputreg i -> (* idem mais provient des registres *)
-	  eval_stmt (add i (hd inputReg)) (tl inputReg) input t
-	| Input i -> (* idem mais provient des entrées *)
-	  eval_stmt (add i (hd input)) inputReg (tl input) t
-	| Outputreg i ->
-	  (* change la valeur des registres pour le prochain cycle *)
-	  let outputReg, output = eval_stmt env inputReg input t in
-	  ((find i)::outputReg) , output
-	| Output i ->
-	  (* renvoie les sorties *)
-	  let outputReg, output = eval_stmt env inputReg input t in
-	  outputReg , ((find i)::output)
+  let rec eval_stmt inputReg input =
+    (* valeurs envoyées par les registres, entrées *)
+    let hd = List.hd and tl = List.tl in
+    function
+      | [] -> [] , []
+      | h::t -> match h with
+	  | Assign (i,e) -> (* on rajoute une variable à l'environnement *)
+            add i (eval_expr e);
+	    eval_stmt inputReg input t
+          | Lw ("rom", il, adresse) ->
+            (* ajoute List.length il variables provenant de la rom *)
+            let adresse = fst (List.fold_left (* calcule l'adresse *)
+                                 (fun (acc,puiss2) bit ->
+                                   acc + puiss2 * (int_of_bool (find bit)) ,
+                                   puiss2 * 2)
+                                 (0,1)
+                                 adresse ) in
+            (* on doit avoir List.length il <= List.length rom.(adresse) *)
+            let _ = List.fold_left
+              (fun rom_word i -> match rom_word with
+                | [] -> raise Lw_rom
+                | h :: t ->
+                  add i h ;
+                  t
+              )
+              rom.(adresse)
+              il
+            in
+            eval_stmt (tl inputReg) input t
+	  | Inputreg i -> (* ajoute une variable provenant des registres *)
+            add i (hd inputReg);
+	    eval_stmt (tl inputReg) input t
+	  | Input i -> (* idem mais provient des entrées *)
+            begin
+              try
+                add i (hd input);
+	        eval_stmt inputReg (tl input) t
+              with Failure s when s = "tl" or s = "hd" -> raise Inputs_missing
+            end
+	  | Outputreg i ->
+	    (* change la valeur des registres pour le prochain cycle *)
+	    let outputReg, output = eval_stmt inputReg input t in
+	    ((find i)::outputReg) , output
+	  | Output i ->
+	    (* renvoie les sorties *)
+	    let outputReg, output = eval_stmt inputReg input t in
+	    outputReg , ((find i)::output)
+          | _ -> failwith "Not implemented"
+  in
 
-let rec simulate prog input regs n env =
-  (* effectue un cycle *)
-  (* l'environnement n'est pas vidé car on suppose que toutes les variables *)
-  (* seront réaffectées avant d'être utiliser lors du cycle                 *)
-  let new_regs, output = eval_stmt env regs input prog in
-  (* affiche les sorties *)
-  List.iter (function true -> print_int 1 | false -> print_int 0) output ;
-  print_newline () ;
-  (* lance les cycles suivant avec les nouvelles valeurs des registres *)
-  if n > 1 then simulate prog input new_regs (n-1) env
+  let rec simulate prog input regs n print_outputs decimal =
+    let espace = 8 in
+    if decimal then (
+      Graphics.open_graph "" ;
+      Graphics.set_text_size ( 3 * espace ) ;
+    );
+    (* effectue un cycle *)
+    (* l'environnement n'est pas vidé car on suppose que toutes les variables
+       seront réaffectées avant d'être utilisees lors du cycle suivant *)
+    let new_regs, output = eval_stmt regs input prog in
+    if print_outputs then (
+      (* affiche les sorties *)
+      List.iter (function b -> print_int (int_of_bool b)) output ;
+      print_newline () ;
+    );
+    if decimal then (
+      (* convertit en décimal les sorties (chaque chiffre sur 4 bits)
+         les affiche en mode graphique *)
+      let affiche_chiffre b0 b1 b2 b3 =
+        let chiffre = b0 + 2 * b1 + 4 * b2 + 8 * b3 in
+        Graphics.draw_string (string_of_int chiffre)
+      in
+      let rec affiche_chiffres = function
+        | b0 :: b1 :: b2 :: b3 :: t ->
+          Graphics.rmoveto espace 0 ;
+          affiche_chiffre
+            (int_of_bool b0) (int_of_bool b1)
+            (int_of_bool b2) (int_of_bool b3);
+          affiche_chiffres t
+        | _ -> ()
+      in
+      Graphics.clear_graph ();
+      affiche_chiffres output;
+    );
+    (* lance les cycles suivants avec les nouvelles valeurs des registres *)
+    if n > 1 then
+      simulate prog input new_regs (n-1) print_outputs decimal;
+    if decimal then Graphics.close_graph ()
+  in
 
-let simulator circuit input n =
   let rec cree_liste = function
     | 0 -> []
     | n -> false::(cree_liste (n-1))
   in (* liste des valeurs initiales des registres *)
-  let env = Array.make (circuit.numero_var_max + 1) false in
-  simulate circuit.programme input (cree_liste circuit.nb_reg) n env
+  simulate circuit.programme input (cree_liste circuit.nb_reg) n print_outputs decimal
