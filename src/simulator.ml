@@ -33,7 +33,7 @@ let simulator circuit input n print_outputs decimal rom =
 	  | Assign (i,e) -> (* on rajoute une variable à l'environnement *)
             add i (eval_expr e);
 	    eval_stmt inputReg input t
-          | Lw ("rom", il, adresse) ->
+          | Lw (il, adresse) ->
             (* ajoute List.length il variables provenant de la rom *)
             let adresse = fst (List.fold_left (* calcule l'adresse *)
                                  (fun (acc,puiss2) bit ->
@@ -52,7 +52,7 @@ let simulator circuit input n print_outputs decimal rom =
               rom.(adresse)
               il
             in
-            eval_stmt (tl inputReg) input t
+            eval_stmt inputReg input t
 	  | Inputreg i -> (* ajoute une variable provenant des registres *)
             add i (hd inputReg);
 	    eval_stmt (tl inputReg) input t

@@ -2,4 +2,4 @@ Création du simulateur de circuits logiques LICS.
 Utiliser ocamlbuild pour compiler par exemple.
 Un dossier lib/ doit contenir les sources de licsLib (voir sur dépôt
 github)
-La commande à exécuter est "ocamlbuild src/main.native"
+La commande à exécuter est "ocamlbuild src/main.native -lib graphics"
