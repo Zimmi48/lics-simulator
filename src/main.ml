@@ -8,6 +8,7 @@ let no_outputs = ref false
 let load_rom = ref ""
 let decimal = ref false
 let inputs = ref []
+let lent = ref false
 
 let arguments s =
 let bool_of_string = function
@@ -24,6 +25,7 @@ let options = [
   "-no-outputs", Arg.Set no_outputs, "N'affiche pas les sorties du circuit";
   "-load-rom", Arg.Set_string load_rom , "Nom du fichier contenant les valeurs initiales de la ROM";
   "-decimal", Arg.Set decimal, "Convertir les sorties en decimal et les afficher en mode graphique."
+  "-mode-lent", Arg.Set lent, "Les cycles ont lieu au rythme de 1 par seconde."
 ]
 
 let () =
@@ -61,7 +63,7 @@ let () =
   end;
   try
     Simulator.simulator
-      circuit (List.rev !inputs) !cycles (not !no_outputs) !decimal rom
+      circuit (List.rev !inputs) !cycles (not !no_outputs) !decimal rom !lent
   with
     | Simulator.Inputs_missing -> (
       eprintf "Inputs missing\n";
