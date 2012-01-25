@@ -49,7 +49,8 @@ let simulator
                                  (0,1)
                                  adresse )) mod 65536 in
             assert (adresse < Array.length rom);
-            assert (List.length il <= List.length rom.(adresse));
+            if (List.length il > List.length rom.(adresse)) then
+              failwith ("Sortie de longueur " ^ (string_of_int (List.length il)) ^ " mais entrée de longueur " ^ (string_of_int (List.length rom.(adresse))) );
             let _ = List.fold_left
               (fun rom_word i -> match rom_word with
                 | [] -> raise Lw_rom
@@ -95,16 +96,17 @@ let simulator
     if decimal then (
       (* convertit en décimal les sorties (chaque chiffre sur 4 bits)
          les affiche en mode graphique *)
-      let affiche_chiffre b0 b1 b2 b3 =
-        let chiffre = b0 + 2 * b1 + 4 * b2 + 8 * b3 in
+      let affiche_chiffre b0 b1 b2 b3 b4 b5 =
+        let chiffre = b0 + 2 * b1 + 4 * b2 + 8 * b3 + 16 * b4 + 32 * b5 in
         (*Graphics.draw_string (string_of_int )*) print_int chiffre
       in
       let rec affiche_chiffres = function
-        | b0 :: b1 :: b2 :: b3 :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: t ->
+        | b0 :: b1 :: b2 :: b3 :: b4 :: b5 :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: t ->
 (*          Graphics.rmoveto espace 0 ;*)
           affiche_chiffre
             (int_of_bool b0) (int_of_bool b1)
-            (int_of_bool b2) (int_of_bool b3);
+            (int_of_bool b2) (int_of_bool b3)
+            (int_of_bool b4) (int_of_bool b5);
           affiche_chiffres t
         | _ -> ()
       in
