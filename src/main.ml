@@ -24,7 +24,7 @@ let options = [
   "-cycles", Arg.Set_int cycles, "Nombre de cycles a effectuer";
   "-no-outputs", Arg.Set no_outputs, "N'affiche pas les sorties du circuit";
   "-load-rom", Arg.Set_string load_rom , "Nom du fichier contenant les valeurs initiales de la ROM";
-  "-decimal", Arg.Set decimal, "Convertir les sorties en decimal et les afficher en mode graphique."
+  "-decimal", Arg.Set decimal, "Convertir les sorties en decimal et les afficher en mode graphique.";
   "-mode-lent", Arg.Set lent, "Les cycles ont lieu au rythme de 1 par seconde."
 ]
 

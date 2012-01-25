@@ -3,13 +3,18 @@ open LicsAst
 exception Inputs_missing
 exception Lw_rom
 
+let int_of_bool = function true -> 1 | false -> 0
 
-let simulator circuit input n print_outputs decimal rom =
+let simulator
+    { programme = prog ; numero_var_max = num_var_max ; nb_reg = nb_reg }
+    input n print_outputs decimal rom lent =
 
-  let int_of_bool = function true -> 1 | false -> 0 in
+  let time_0 = Unix.time () in
+  let last_time = ref time_0 in
+  (* on pourrait s'en servir aussi pour l'initialisation *)
 
   (* env contient les variables déjà définies *)
-  let env = Array.make (circuit.numero_var_max + 1) false in
+  let env = Array.make (num_var_max + 1) false in
   let add i x = env.(i) <- x in
   let find x = env.(x) in
 
@@ -74,11 +79,11 @@ let simulator circuit input n print_outputs decimal rom =
           | _ -> failwith "Not implemented"
   in
 
-  let rec simulate prog input regs n print_outputs decimal =
+  let rec simulate regs n =
     let espace = 8 in
     if decimal then (
       Graphics.open_graph "" ;
-      Graphics.set_text_size ( 3 * espace ) ;
+      Graphics.set_text_size ( 50 * espace ) ;
     );
     (* effectue un cycle *)
     (* l'environnement n'est pas vidé car on suppose que toutes les variables
@@ -109,13 +114,23 @@ let simulator circuit input n print_outputs decimal rom =
       affiche_chiffres output;
     );
     (* lance les cycles suivants avec les nouvelles valeurs des registres *)
-    if n > 1 then
-      simulate prog input new_regs (n-1) print_outputs decimal;
-    if decimal then Graphics.close_graph ()
+    if n > 1 then begin
+      if lent then
+        while Unix.time() -. !last_time < 1. do () done;
+      last_time := Unix.time ();
+        
+      simulate new_regs (n-1);
+    end
   in
 
   let rec cree_liste = function
     | 0 -> []
     | n -> false::(cree_liste (n-1))
   in (* liste des valeurs initiales des registres *)
-  simulate circuit.programme input (cree_liste circuit.nb_reg) n print_outputs decimal
+
+  (* lance la simulation *)
+  simulate (cree_liste nb_reg) n;
+
+  if decimal then
+    let _ = Graphics.read_key () in
+    Graphics.close_graph()
