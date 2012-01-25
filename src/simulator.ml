@@ -13,6 +13,8 @@ let simulator
   let last_time = ref time_0 in
   (* on pourrait s'en servir aussi pour l'initialisation *)
 
+  (*let espace = 8 in  pour l'affichage graphique *)
+
   (* env contient les variables déjà définies *)
   let env = Array.make (num_var_max + 1) false in
   let add i x = try env.(i) <- x with _ -> failwith "add" in
@@ -81,11 +83,6 @@ let simulator
   in
 
   let rec simulate input regs n =
-    let espace = 8 in
-    if decimal then (
-      Graphics.open_graph "" ;
-      Graphics.set_text_size ( 50 * espace ) ;
-    );
     (* effectue un cycle *)
     (* l'environnement n'est pas vidé car on suppose que toutes les variables
        seront réaffectées avant d'être utilisees lors du cycle suivant *)
@@ -100,18 +97,20 @@ let simulator
          les affiche en mode graphique *)
       let affiche_chiffre b0 b1 b2 b3 =
         let chiffre = b0 + 2 * b1 + 4 * b2 + 8 * b3 in
-        Graphics.draw_string (string_of_int chiffre)
+        (*Graphics.draw_string (string_of_int )*) print_int chiffre
       in
       let rec affiche_chiffres = function
-        | b0 :: b1 :: b2 :: b3 :: t ->
-          Graphics.rmoveto espace 0 ;
+        | b0 :: b1 :: b2 :: b3 :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: _ :: t ->
+(*          Graphics.rmoveto espace 0 ;*)
           affiche_chiffre
             (int_of_bool b0) (int_of_bool b1)
             (int_of_bool b2) (int_of_bool b3);
           affiche_chiffres t
         | _ -> ()
       in
-      Graphics.clear_graph ();
+(*      Graphics.clear_graph ();
+      Graphics.moveto espace espace;*)
+      print_newline ();
       affiche_chiffres output;
     );
     (* lance les cycles suivants avec les nouvelles valeurs des registres *)
@@ -139,6 +138,12 @@ let simulator
   else
     simulate input (cree_liste nb_reg) n;
 
-  if decimal then
+(*
+    if decimal then (
+      Graphics.open_graph "" ;
+      Graphics.set_text_size ( 50 * espace ) ;
+    );
+*)
+(*  if decimal then
     let _ = Graphics.read_key () in
-    Graphics.close_graph()
+    Graphics.close_graph()*)
