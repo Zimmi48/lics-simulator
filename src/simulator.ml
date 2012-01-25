@@ -7,7 +7,7 @@ let int_of_bool = function true -> 1 | false -> 0
 
 let simulator
     { programme = prog ; numero_var_max = num_var_max ; nb_reg = nb_reg }
-    input n print_outputs decimal rom lent =
+    input n print_outputs decimal rom horloge =
 
   let time_0 = Unix.time () in
   let last_time = ref time_0 in
@@ -79,7 +79,7 @@ let simulator
           | _ -> failwith "Not implemented"
   in
 
-  let rec simulate regs n =
+  let rec simulate input regs n =
     let espace = 8 in
     if decimal then (
       Graphics.open_graph "" ;
@@ -115,11 +115,15 @@ let simulator
     );
     (* lance les cycles suivants avec les nouvelles valeurs des registres *)
     if n > 1 then begin
-      if lent then
-        while Unix.time() -. !last_time < 1. do () done;
-      last_time := Unix.time ();
-        
-      simulate new_regs (n-1);
+      if horloge then
+        if Unix.time() -. !last_time >= 1. then begin
+          last_time := Unix.time ();
+          simulate [true] new_regs (n - 1)
+        end
+        else
+          simulate [false] new_regs (n - 1)
+      else
+        simulate input new_regs (n-1);
     end
   in
 
@@ -129,7 +133,10 @@ let simulator
   in (* liste des valeurs initiales des registres *)
 
   (* lance la simulation *)
-  simulate (cree_liste nb_reg) n;
+  if horloge then
+    simulate [false] (cree_liste nb_reg) n
+  else
+    simulate input (cree_liste nb_reg) n;
 
   if decimal then
     let _ = Graphics.read_key () in
