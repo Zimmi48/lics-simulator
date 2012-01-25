@@ -15,8 +15,8 @@ let simulator
 
   (* env contient les variables déjà définies *)
   let env = Array.make (num_var_max + 1) false in
-  let add i x = env.(i) <- x in
-  let find x = env.(x) in
+  let add i x = try env.(i) <- x with _ -> failwith "add" in
+  let find x = try env.(x) with _ -> failwith "find" in
 
   let eval_expr = function
     | Const c -> c
@@ -40,13 +40,14 @@ let simulator
 	    eval_stmt inputReg input t
           | Lw (il, adresse) ->
             (* ajoute List.length il variables provenant de la rom *)
-            let adresse = fst (List.fold_left (* calcule l'adresse *)
+            let adresse = (fst (List.fold_left (* calcule l'adresse *)
                                  (fun (acc,puiss2) bit ->
                                    acc + puiss2 * (int_of_bool (find bit)) ,
                                    puiss2 * 2)
                                  (0,1)
-                                 adresse ) in
-            (* on doit avoir List.length il <= List.length rom.(adresse) *)
+                                 adresse )) mod 65536 in
+            assert (adresse < Array.length rom);
+            assert (List.length il <= List.length rom.(adresse));
             let _ = List.fold_left
               (fun rom_word i -> match rom_word with
                 | [] -> raise Lw_rom
