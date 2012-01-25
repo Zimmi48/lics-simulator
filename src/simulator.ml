@@ -50,7 +50,7 @@ let simulator
                                  adresse )) mod 65536 in
             assert (adresse < Array.length rom);
             if (List.length il > List.length rom.(adresse)) then
-              failwith ("Sortie de longueur " ^ (string_of_int (List.length il)) ^ " mais entrée de longueur " ^ (string_of_int (List.length rom.(adresse))) );
+              failwith ("Sortie de longueur " ^ (string_of_int (List.length il)) ^ " mais entrée de longueur " ^ (string_of_int (List.length rom.(adresse))) ^ " à l'adresse " ^ (string_of_int adresse) );
             let _ = List.fold_left
               (fun rom_word i -> match rom_word with
                 | [] -> raise Lw_rom
